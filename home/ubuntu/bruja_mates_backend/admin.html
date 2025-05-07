@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - La Bruja de las Mates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #413261;
+            --primary-dark: #2a1124;
+            --accent-color: #de9448;
+            --accent-dark: #26100b;
+            --light-color: #fdfbf8;
+            --dark-color: #19192c;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-dark);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent-color);
+            border-color: var(--accent-dark);
+            color: white;
+        }
+        
+        .btn-accent:hover {
+            background-color: var(--accent-dark);
+            border-color: var(--accent-dark);
+            color: white;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-img {
+            max-height: 60px;
+            margin-right: 15px;
+        }
+        
+        .logo-text {
+            color: white;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            background-color: rgba(65, 50, 97, 0.1);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+        }
+        
+        .pdf-card {
+            transition: transform 0.3s;
+        }
+        
+        .pdf-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .course-badge {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <div class="logo-container">
+                <img src="/public/logo.png" alt="La Bruja de las Mates" class="logo-img">
+                <h1 class="logo-text">La Bruja de las Mates®</h1>
+            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Panel de Administración</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://zbvifhxw.manus.space" target="_blank">Ver Biblioteca</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <div class="container my-5">
+        <div class="row">
+            <!-- Sección de carga de PDFs -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Subir Nuevo PDF</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="uploadForm">
+                            <div class="upload-area mb-3" id="dropArea">
+                                <input type="file" id="pdfFile" name="pdf" accept=".pdf" style="display: none;">
+                                <div class="upload-icon">
+                                    <i class="bi bi-file-earmark-pdf"></i>
+                                </div>
+                                <h5 class="mt-3">Arrastra y suelta un PDF aquí</h5>
+                                <p class="text-muted">o haz clic para seleccionar un archivo</p>
+                                <div id="fileInfo" class="mt-3" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-file-earmark-pdf me-2"></i>
+                                        <span id="fileName"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="pdfTitle" class="form-label">Título del PDF</label>
+                                <input type="text" class="form-control" id="pdfTitle" name="title" placeholder="Ej: Teorema de Pitágoras">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="pdfCourse" class="form-label">Curso</label>
+                                <select class="form-select" id="pdfCourse" name="course">
+                                    <option value="general">General</option>
+                                    <option value="eso1">1º ESO</option>
+                                    <option value="eso2">2º ESO</option>
+                                    <option value="eso3">3º ESO</option>
+                                    <option value="eso4">4º ESO</option>
+                                    <option value="bach1">1º Bachillerato</option>
+                                    <option value="bach2">2º Bachillerato</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="pdfAuthor" class="form-label">Autor (opcional)</label>
+                                <input type="text" class="form-control" id="pdfAuthor" name="author" placeholder="Ej: La Bruja de las Mates">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-cloud-upload me-2"></i>Subir PDF
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Estadísticas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div class="text-center">
+                                <h3 id="totalPdfs">0</h3>
+                                <p class="text-muted">PDFs</p>
+                            </div>
+                            <div class="text-center">
+                                <h3 id="totalPages">0</h3>
+                                <p class="text-muted">Páginas</p>
+                            </div>
+                        </div>
+                        <h6>Distribución por cursos</h6>
+                        <div id="courseStats">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Cargando estadísticas...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sección de listado de PDFs -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Biblioteca de PDFs</h5>
+                        <div class="input-group" style="max-width: 300px;">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Buscar PDFs...">
+                            <button class="btn btn-outline-light" type="button" id="searchButton">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <select class="form-select" id="filterCourse">
+                                <option value="all">Todos los cursos</option>
+                                <option value="general">General</option>
+                                <option value="eso1">1º ESO</option>
+                                <option value="eso2">2º ESO</option>
+                                <option value="eso3">3º ESO</option>
+                                <option value="eso4">4º ESO</option>
+                                <option value="bach1">1º Bachillerato</option>
+                                <option value="bach2">2º Bachillerato</option>
+                            </select>
+                        </div>
+                        
+                        <div id="pdfList">
+                            <!-- Aquí se cargarán los PDFs -->
+                        </div>
+                        
+                        <div id="loadingSpinner" class="loading-spinner">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-2">Cargando PDFs...</p>
+                        </div>
+                        
+                        <div id="noPdfsMessage" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No hay PDFs disponibles. ¡Sube tu primer PDF!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para ver contenido del PDF -->
+    <div class="modal fade" id="pdfContentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pdfContentTitle">Contenido del PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="pdfContentPages">
+                        <!-- Aquí se cargará el contenido del PDF -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para editar PDF -->
+    <div class="modal fade" id="editPdfModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPdfForm">
+                        <input type="hidden" id="editPdfId">
+                        
+                        <div class="mb-3">
+                            <label for="editPdfTitle" class="form-label">Título del PDF</label>
+                            <input type="text" class="form-control" id="editPdfTitle" name="title">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editPdfCourse" class="form-label">Curso</label>
+                            <select class="form-select" id="editPdfCourse" name="course">
+                                <option value="general">General</option>
+                                <option value="eso1">1º ESO</option>
+                                <option value="eso2">2º ESO</option>
+                                <option value="eso3">3º ESO</option>
+                                <option value="eso4">4º ESO</option>
+                                <option value="bach1">1º Bachillerato</option>
+                                <option value="bach2">2º Bachillerato</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="editPdfAuthor" class="form-label">Autor</label>
+                            <input type="text" class="form-control" id="editPdfAuthor" name="author">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Reemplazar archivo (opcional)</label>
+                            <input type="file" class="form-control" id="editPdfFile" name="pdf" accept=".pdf">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveEditPdfButton">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de confirmación para eliminar PDF -->
+    <div class="modal fade" id="deletePdfModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar el PDF "<span id="deletePdfTitle"></span>"?</p>
+                    <p class="text-danger">Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteButton">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast para notificaciones -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">Notificación</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                Mensaje de notificación
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuración de la API
+        const API_URL = 'http://localhost:3001/api';
+        
+        // Referencias a elementos del DOM
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('pdfFile');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const uploadForm = document.getElementById('uploadForm');
+        const pdfList = document.getElementById('pdfList');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const noPdfsMessage = document.getElementById('noPdfsMessage');
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const filterCourse = document.getElementById('filterCourse');
+        const totalPdfs = document.getElementById('totalPdfs');
+        const totalPages = document.getElementById('totalPages');
+        const courseStats = document.getElementById('courseStats');
+        
+        // Referencias a modales
+        const pdfContentModal = new bootstrap.Modal(document.getElementById('pdfContentModal'));
+        const editPdfModal = new bootstrap.Modal(document.getElementById('editPdfModal'));
+        const deletePdfModal = new bootstrap.Modal(document.getElementById('deletePdfModal'));
+        const toast = new bootstrap.Toast(document.getElementById('toast'));
+        
+        // Variables globales
+        let currentPdfId = null;
+        
+        // Función para mostrar notificaciones
+        function showToast(title, message, success = true) {
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            document.getElementById('toast').classList.remove('bg-success', 'bg-danger', 'text-white');
+            
+            if (success) {
+                document.getElementById('toast').classList.add('bg-success', 'text-white');
+            } else {
+                document.getElementById('toast').classList.add('bg-danger', 'text-white');
+            }
+            
+            toast.show();
+        }
+        
+        // Función para cargar los PDFs
+        async function loadPDFs(search = '', course = 'all') {
+            loadingSpinner.style.display = 'block';
+            pdfList.innerHTML = '';
+            noPdfsMessage.style.display = 'none';
+            
+            try {
+                let url = `${API_URL}/pdfs`;
+                const params = [];
+                
+                if (search) {
+                    params.push(`search=${encodeURIComponent(search)}`);
+                }
+                
+                if (course && course !== 'all') {
+                    params.push(`course=${encodeURIComponent(course)}`);
+                }
+                
+                if (params.length > 0) {
+                    url += `?${params.join('&')}`;
+                }
+                
+                const response = await fetch(url);
+                const pdfs = await response.json();
+                
+                if (pdfs.length === 0) {
+                    noPdfsMessage.style.display = 'block';
+                } else {
+                    pdfs.forEach(pdf => {
+                        const card = document.createElement('div');
+                        card.className = 'card pdf-card mb-3';
+                        
+                        // Mapear códigos de curso a nombres legibles
+                        const courseNames = {
+                            'general': 'General',
+                            'eso1': '1º ESO',
+                            'eso2': '2º ESO',
+                            'eso3': '3º ESO',
+                            'eso4': '4º ESO',
+                            'bach1': '1º Bachillerato',
+                            'bach2': '2º Bachillerato'
+                        };
+                        
+                        const courseName = courseNames[pdf.course] || pdf.course;
+                        
+                        card.innerHTML = `
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="card-title">${pdf.title}</h5>
+                                        <h6 class="card-subtitle mb-2 text-muted">${pdf.author || 'Sin autor'} | ${pdf.num_pages} páginas</h6>
+                                        <span class="course-badge">${courseName}</span>
+                                        <p class="card-text mt-2">
+                                            <small class="text-muted">Subido: ${new Date(pdf.upload_date).toLocaleDateString()}</small>
+                                        </p>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item view-content" data-id="${pdf.id}" href="#">Ver contenido</a></li>
+                                            <li><a class="dropdown-item edit-pdf" data-id="${pdf.id}" href="#">Editar</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li><a class="dropdown-item text-danger delete-pdf" data-id="${pdf.id}" data-title="${pdf.title}" href="#">Eliminar</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        pdfList.appendChild(card);
+                    });
+                    
+                    // Añadir event listeners a los botones
+                    document.querySelectorAll('.view-content').forEach(button => {
+                        button.addEventListener('click', viewPdfContent);
+                    });
+                    
+                    document.querySelectorAll('.edit-pdf').forEach(button => {
+                        button.addEventListener('click', editPdf);
+                    });
+                    
+                    document.querySelectorAll('.delete-pdf').forEach(button => {
+                        button.addEventListener('click', confirmDeletePdf);
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar PDFs:', error);
+                showToast('Error', 'No se pudieron cargar los PDFs', false);
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        }
+        
+        // Función para cargar estadísticas
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/stats`);
+                const stats = await response.json();
+                
+                totalPdfs.textContent = stats.totalPdfs || 0;
+                totalPages.textContent = stats.totalPages || 0;
+                
+                // Mostrar distribución por cursos
+                courseStats.innerHTML = '';
+                
+                if (stats.courseDistribution && stats.courseDistribution.length > 0) {
+                    const courseNames = {
+                        'general': 'General',
+                        'eso1': '1º ESO',
+                        'eso2': '2º ESO',
+                        'eso3': '3º ESO',
+                        'eso4': '4º ESO',
+                        'bach1': '1º Bachillerato',
+                        'bach2': '2º Bachillerato'
+                    };
+                    
+                    stats.courseDistribution.forEach(item => {
+                        const courseName = courseNames[item.course] || item.course;
+                        const div = document.createElement('div');
+                        div.className = 'd-flex justify-content-between mb-2';
+                        div.innerHTML = `
+                            <span>${courseName}</span>
+                            <span class="badge bg-primary">${item.count}</span>
+                        `;
+                        courseStats.appendChild(div);
+                    });
+                } else {
+                    courseStats.innerHTML = '<p class="text-muted">No hay datos disponibles</p>';
+                }
+            } catch (error) {
+                console.error('Error al cargar estadísticas:', error);
+            }
+        }
+        
+        // Función para ver el contenido de un PDF
+        async function viewPdfContent(event) {
+            event.preventDefault();
+            const pdfId = this.getAttribute('data-id');
+            
+            try {
+                const response = await fetch(`${API_URL}/pdfs/${pdfId}`);
+                const pdf = await response.json();
+                
+                document.getElementById('pdfContentTitle').textContent = pdf.title;
+                
+                const contentResponse = await fetch(`${API_URL}/pdfs/${pdfId}/content`);
+                const content = await contentResponse.json();
+                
+                const pdfContentPages = document.getElementById('pdfContentPages');
+                pdfContentPages.innerHTML = '';
+                
+                if (content.length === 0) {
+                    pdfContentPages.innerHTML = '<div class="alert alert-info">No hay contenido disponible para este PDF</div>';
+                } else {
+                    content.forEach(page => {
+                        const pageDiv = document.createElement('div');
+                        pageDiv.className = 'card mb-3';
+                        pageDiv.innerHTML = `
+                            <div class="card-header">Página ${page.page_num + 1}</div>
+                            <div class="card-body">
+                                <p style="white-space: pre-line;">${page.content}</p>
+                            </div>
+                        `;
+                        pdfContentPages.appendChild(pageDiv);
+                    });
+                }
+                
+                pdfContentModal.show();
+            } catch (error) {
+                console.error('Error al cargar contenido del PDF:', error);
+                showToast('Error', 'No se pudo cargar el contenido del PDF', false);
+            }
+        }
+        
+        // Función para editar un PDF
+        async function editPdf(event) {
+            event.preventDefault();
+            const pdfId = this.getAttribute('data-id');
+            currentPdfId = pdfId;
+            
+            try {
+                const response = await fetch(`${API_URL}/pdfs/${pdfId}`);
+                const pdf = await response.json();
+                
+                document.getElementById('editPdfId').value = pdf.id;
+                document.getElementById('editPdfTitle').value = pdf.title;
+                document.getElementById('editPdfCourse').value = pdf.course || 'general';
+                document.getElementById('editPdfAuthor').value = pdf.author || '';
+                
+                editPdfModal.show();
+            } catch (error) {
+                console.error('Error al cargar datos del PDF:', error);
+                showToast('Error', 'No se pudieron cargar los datos del PDF', false);
+            }
+        }
+        
+        // Función para confirmar eliminación de un PDF
+        function confirmDeletePdf(event) {
+            event.preventDefault();
+            const pdfId = this.getAttribute('data-id');
+            const pdfTitle = this.getAttribute('data-title');
+            
+            currentPdfId = pdfId;
+            document.getElementById('deletePdfTitle').textContent = pdfTitle;
+            
+            deletePdfModal.show();
+        }
+        
+        // Función para eliminar un PDF
+        async function deletePdf() {
+            if (!currentPdfId) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/pdfs/${currentPdfId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showToast('Éxito', 'PDF eliminado correctamente');
+                    loadPDFs(searchInput.value, filterCourse.value);
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al eliminar el PDF');
+                }
+            } catch (error) {
+                console.error('Error al eliminar PDF:', error);
+                showToast('Error', error.message || 'No se pudo eliminar el PDF', false);
+            } finally {
+                deletePdfModal.hide();
+                currentPdfId = null;
+            }
+        }
+        
+        // Event Listeners
+        
+        // Drag and drop para subir PDFs
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('bg-light');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('bg-light');
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileInfo();
+            }
+        }
+        
+        dropArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', updateFileInfo);
+        
+        function updateFileInfo() {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'block';
+            } else {
+                fileInfo.style.display = 'none';
+            }
+        }
+        
+        // Subir PDF
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!fileInput.files.length) {
+                showToast('Error', 'Por favor, selecciona un archivo PDF', false);
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('pdf', fileInput.files[0]);
+            formData.append('title', document.getElementById('pdfTitle').value || fileInput.files[0].name);
+            formData.append('author', document.getElementById('pdfAuthor').value || 'La Bruja de las Mates');
+            formData.append('course', document.getElementById('pdfCourse').value);
+            
+            try {
+                const response = await fetch(`${API_URL}/pdfs`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showToast('Éxito', 'PDF subido correctamente');
+                    uploadForm.reset();
+                    fileInfo.style.display = 'none';
+                    loadPDFs(searchInput.value, filterCourse.value);
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al subir el PDF');
+                }
+            } catch (error) {
+                console.error('Error al subir PDF:', error);
+                showToast('Error', error.message || 'No se pudo subir el PDF', false);
+            }
+        });
+        
+        // Guardar cambios en edición de PDF
+        document.getElementById('saveEditPdfButton').addEventListener('click', async function() {
+            if (!currentPdfId) return;
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('editPdfTitle').value);
+            formData.append('author', document.getElementById('editPdfAuthor').value);
+            formData.append('course', document.getElementById('editPdfCourse').value);
+            
+            const fileInput = document.getElementById('editPdfFile');
+            if (fileInput.files.length > 0) {
+                formData.append('pdf', fileInput.files[0]);
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/pdfs/${currentPdfId}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showToast('Éxito', 'PDF actualizado correctamente');
+                    editPdfModal.hide();
+                    loadPDFs(searchInput.value, filterCourse.value);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al actualizar el PDF');
+                }
+            } catch (error) {
+                console.error('Error al actualizar PDF:', error);
+                showToast('Error', error.message || 'No se pudo actualizar el PDF', false);
+            }
+        });
+        
+        // Confirmar eliminación de PDF
+        document.getElementById('confirmDeleteButton').addEventListener('click', deletePdf);
+        
+        // Búsqueda y filtrado
+        searchButton.addEventListener('click', function() {
+            loadPDFs(searchInput.value, filterCourse.value);
+        });
+        
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadPDFs(searchInput.value, filterCourse.value);
+            }
+        });
+        
+        filterCourse.addEventListener('change', function() {
+            loadPDFs(searchInput.value, this.value);
+        });
+        
+        // Cargar PDFs y estadísticas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPDFs();
+            loadStats();
+        });
+    </script>
+</body>
+</html>
